@@ -1,0 +1,6 @@
+@WsApiExamen_HostAddress = http://localhost:5065
+
+GET {{WsApiExamen_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
