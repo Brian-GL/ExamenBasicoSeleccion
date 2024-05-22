@@ -31,7 +31,7 @@ namespace ApiExamen.Infrastructure.Concrete
                 // Llamar API
 
                 using StringContent stringContent = new(content: JsonConvert.SerializeObject(model), encoding: Encoding.UTF8, mediaType: MediaTypeNames.Application.Json);
-                using HttpResponseMessage responseMessage = await _HttpClient.PostAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "AgregarExamen"), stringContent);
+                using HttpResponseMessage responseMessage = await _HttpClient.PostAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "Examen/AgregarExamen"), stringContent);
 
                 if (responseMessage.IsSuccessStatusCode)
                 {
@@ -69,7 +69,7 @@ namespace ApiExamen.Infrastructure.Concrete
                 // Llamar API
 
                 using StringContent stringContent = new(content: JsonConvert.SerializeObject(model), encoding: Encoding.UTF8, mediaType: MediaTypeNames.Application.Json);
-                using HttpResponseMessage responseMessage = await _HttpClient.PutAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "EliminarExamen"), stringContent);
+                using HttpResponseMessage responseMessage = await _HttpClient.PutAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "Examen/EliminarExamen"), stringContent);
 
                 if (responseMessage.IsSuccessStatusCode)
                 {
@@ -107,16 +107,27 @@ namespace ApiExamen.Infrastructure.Concrete
                 // Llamar API
 
                 using StringContent stringContent = new(content: JsonConvert.SerializeObject(model), encoding: Encoding.UTF8, mediaType: MediaTypeNames.Application.Json);
-                using HttpResponseMessage responseMessage = await _HttpClient.PostAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "ConsultarExamen"), stringContent);
+                using HttpResponseMessage responseMessage = await _HttpClient.PostAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "Examen/ConsultarExamen"), stringContent);
 
                 if (responseMessage.IsSuccessStatusCode)
                 {
                     string body = await responseMessage.Content.ReadAsStringAsync();
-                    _Response = JsonConvert.DeserializeObject<InfrastructureResponse>(body) ?? new()
+
+                    SpecificInfrastructureResponse<List<GetExamenBdResponse>> _PrevResponse
+                        = JsonConvert.DeserializeObject<SpecificInfrastructureResponse<List<GetExamenBdResponse>>>(body) ?? new()
                     {
                         Success = false,
-                        Message = "Lo sentimos. No conseguimos acceder al web service"
-                    }; ;
+                        Message = "Lo sentimos. No conseguimos acceder al web service",
+                        Value = []
+                    };
+
+                    _Response = new()
+                    {
+                        Success = _PrevResponse.Success,
+                        Message = _PrevResponse.Message,
+                        Value = _PrevResponse.Value
+
+                    };
                 }
                 else
                 {
@@ -145,7 +156,7 @@ namespace ApiExamen.Infrastructure.Concrete
                 // Llamar API
 
                 using StringContent stringContent = new(content: JsonConvert.SerializeObject(model), encoding: Encoding.UTF8, mediaType: MediaTypeNames.Application.Json);
-                using HttpResponseMessage responseMessage = await _HttpClient.PutAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "ActualizarExamen"), stringContent);
+                using HttpResponseMessage responseMessage = await _HttpClient.PutAsync(requestUri: string.Concat(_HttpClient.BaseAddress, "Examen/ActualizarExamen"), stringContent);
 
                 if (responseMessage.IsSuccessStatusCode)
                 {

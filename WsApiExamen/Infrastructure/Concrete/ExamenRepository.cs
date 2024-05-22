@@ -1,6 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using System.Data.Common;
 using WsApiExamen.Entities;
 using WsApiExamen.Extensions;
 using WsApiExamen.Infrastructure.Abstract;
@@ -33,36 +32,33 @@ namespace WsApiExamen.Infrastructure.Concrete
                 using SqlConnection sqlConnection = new(connectionString: _DbContext.Database.GetConnectionString());
                 await sqlConnection.OpenAsync();
 
-                using (DbTransaction bdTransaction = await sqlConnection.BeginTransactionAsync())
+                SqlCommand command = new("INSERT INTO dbo.tblExamen (Nombre,Descripcion) VALUES(@Nombre,@Descripcion)", sqlConnection)
                 {
+                    Transaction = sqlConnection.BeginTransaction()
+                };
 
-                    try
+                command.Parameters.AddWithValue("@Nombre", (object?)model!.Nombre ?? DBNull.Value);
+                command.Parameters.AddWithValue("@Descripcion", (object?)model.Descripcion ?? DBNull.Value);
+
+                try
+                {
+                    using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                    BdActionResponse bdActionResponse = new()
                     {
-                        SqlCommand command = new("INSERT INTO dbo.tblExamen (Nombre,Descripcion) VALUES(@Nombre,@Descripcion)", sqlConnection);
-                        command.Parameters.AddWithValue("@Nombre", model!.Nombre);
-                        command.Parameters.AddWithValue("@Descripcion", model.Descripcion);
+                        Codigo = 1,
+                        Mensaje = "Registro insertado satisfactoriamente",
+                    };
 
-                        using SqlDataReader reader = await command.ExecuteReaderAsync();
+                    _Response = bdActionResponse.GetBdResponse();
 
-                        while (await reader.ReadAsync())
-                        {
-                            BdActionResponse bdActionResponse = new()
-                            {
-                                Codigo = reader.GetInt32(0),
-                                Mensaje = reader.GetString(1),
-                            };
-
-                            _Response = bdActionResponse.GetBdResponse();
-
-                            break;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await bdTransaction.RollbackAsync();
-                    }
+                    await command.Transaction.CommitAsync();
                 }
-
+                catch (Exception ex)
+                {
+                    _Response = ex.GetExceptionResponse();
+                    await command.Transaction.RollbackAsync();
+                }
                 await sqlConnection.CloseAsync();
             }
             catch (Exception ex)
@@ -94,32 +90,31 @@ namespace WsApiExamen.Infrastructure.Concrete
                 using SqlConnection sqlConnection = new(connectionString: _DbContext.Database.GetConnectionString());
                 await sqlConnection.OpenAsync();
 
-                using (DbTransaction bdTransaction = await sqlConnection.BeginTransactionAsync())
+                SqlCommand command = new("DELETE FROM dbo.tblExamen WHERE IdExamen = @IdExamen AND Activo = 1", sqlConnection)
                 {
+                    Transaction = sqlConnection.BeginTransaction()
+                };
+                command.Parameters.AddWithValue("@IdExamen", (object?)model!.IdExamen ?? DBNull.Value);
 
-                    try
+                try
+                {
+                    using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                    BdActionResponse bdActionResponse = new()
                     {
-                        SqlCommand command = new("DELETE FROM dbo.tblExamen WHERE IdExamen = @IdExamen AND Activo = 1", sqlConnection);
-                        command.Parameters.AddWithValue("@IdExamen", model!.IdExamen);
+                        Codigo = 1,
+                        Mensaje = "Registro eliminado satisfactoriamente",
+                    };
 
-                        using SqlDataReader reader = await command.ExecuteReaderAsync();
-                        while (await reader.ReadAsync())
-                        {
-                            BdActionResponse bdActionResponse = new()
-                            {
-                                Codigo = reader.GetInt32(0),
-                                Mensaje = reader.GetString(1),
-                            };
+                    _Response = bdActionResponse.GetBdResponse();
 
-                            _Response = bdActionResponse.GetBdResponse();
+                    await command.Transaction.CommitAsync();
 
-                            break;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await bdTransaction.RollbackAsync();
-                    }
+                }
+                catch (Exception ex)
+                {
+                    _Response = ex.GetExceptionResponse();
+                    await command.Transaction.RollbackAsync();
                 }
 
                 await sqlConnection.CloseAsync();
@@ -157,10 +152,10 @@ namespace WsApiExamen.Infrastructure.Concrete
                     await sqlConnection.OpenAsync();
 
                     SqlCommand command = new("SELECT T0.IdExamen, T0.Nombre, T0.Descripcion FROM dbo.tblExamen T0 WITH(NOLOCK) WHERE T0.IdExamen = ISNULL(@IdExamen, T0.IdExamen) AND ISNULL(T0.Nombre, '1') = ISNULL(@Nombre, ISNULL(T0.Nombre, '1')) AND ISNULL(T0.Descripcion, '1') = ISNULL(@Descripcion, ISNULL(T0.Descripcion, '1')) AND T0.Activo = 1", sqlConnection);
-                    command.Parameters.AddWithValue("@IdExamen", model!.IdExamen);
-                    command.Parameters.AddWithValue("@Nombre", model.Nombre);
-                    command.Parameters.AddWithValue("@Descripcion", model.Descripcion);
-                    
+                    command.Parameters.AddWithValue("@IdExamen", (object?)model!.IdExamen ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Nombre", (object?)model.Nombre ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Descripcion", (object?)model.Descripcion ?? DBNull.Value);
+
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
@@ -224,35 +219,32 @@ namespace WsApiExamen.Infrastructure.Concrete
                 using SqlConnection sqlConnection = new(connectionString: _DbContext.Database.GetConnectionString());
                 await sqlConnection.OpenAsync();
 
-                using (DbTransaction bdTransaction = await sqlConnection.BeginTransactionAsync())
+                SqlCommand command = new("UPDATE T0 SET T0.Nombre = @Nombre, T0.Descripcion = @Descripcion FROM dbo.tblExamen T0 WITH(NOLOCK) WHERE t0.IdExamen = @IdExamen AND T0.Activo = 1", sqlConnection)
                 {
+                    Transaction = sqlConnection.BeginTransaction()
+                };
+                command.Parameters.AddWithValue("@IdExamen", (object?)model!.IdExamen ?? DBNull.Value);
+                command.Parameters.AddWithValue("@Nombre", (object?)model!.Nombre ?? DBNull.Value);
+                command.Parameters.AddWithValue("@Descripcion", (object?)model.Descripcion ?? DBNull.Value);
+                
+                try
+                {
+                    using SqlDataReader reader = await command.ExecuteReaderAsync();
 
-                    try
+                    BdActionResponse bdActionResponse = new()
                     {
-                        SqlCommand command = new("UPDATE T0 SET T0.Nombre = @Nombre, T0.Descripcion = @Descripcion FROM dbo.tblExamen T0 WITH(NOLOCK) WHERE t0.IdExamen = @IdExamen AND T0.Activo = 1", sqlConnection);
-                        command.Parameters.AddWithValue("@IdExamen", model!.IdExamen);
-                        command.Parameters.AddWithValue("@Nombre", model!.Nombre);
-                        command.Parameters.AddWithValue("@Descripcion", model.Descripcion);
+                        Codigo = 1,
+                        Mensaje = "Registro actualizado satisfactoriamente",
+                    };
 
-                        using SqlDataReader reader = await command.ExecuteReaderAsync();
+                    _Response = bdActionResponse.GetBdResponse();
 
-                        while (await reader.ReadAsync())
-                        {
-                            BdActionResponse bdActionResponse = new()
-                            {
-                                Codigo = reader.GetInt32(0),
-                                Mensaje = reader.GetString(1),
-                            };
-
-                            _Response = bdActionResponse.GetBdResponse();
-
-                            break;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await bdTransaction.RollbackAsync();
-                    }
+                    await command.Transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    _Response = ex.GetExceptionResponse();
+                    await command.Transaction.RollbackAsync();
                 }
 
                 await sqlConnection.CloseAsync();
